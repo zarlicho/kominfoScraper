@@ -64,7 +64,7 @@ class Hoax:
     def GetDate(self):
         try:
             elements = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='date']")))
-            return [x.text for x in elements]
+            return [x.text for x in elements][0].split('\n')[1]
         except Exception as e:
             print(e)
             print("error while get data data")
@@ -79,6 +79,7 @@ class Hoax:
             details = [details for details in Adetail]
             lCounters = [lCounter.get_attribute('href') for lCounter in Lcounter]
             desc = [desc.text for desc in deskirpsi][1:-1][:-1]
+            print(desc)
             return details, lCounters,desc
         except Exception as e:
             print("error while get author data",e)
@@ -109,7 +110,7 @@ class Hoax:
                 img = self.GetImage()   
                 date = self.GetDate()
                 self.outSheet.cell(row=lastRow + 1, column=4, value=img[0])
-                self.outSheet.cell(row=lastRow + 1, column=8, value=date[0])
+                self.outSheet.cell(row=lastRow + 1, column=8, value=date)
                 self.outSheet.cell(row=lastRow + 1, column=6, value=str(desc))
                 if details != None:
                     for detail in details:
@@ -187,7 +188,8 @@ class Satker:
     def GetDate(self): #get news date
         try:
             elements = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='date']")))
-            return [x.text for x in elements]
+            print("date: ",[x.text for x in elements][0].split('\n')[1])
+            return [x.text for x in elements][0].split('\n')[1]
         except Exception as e:
             print(e)
             print("error getting date data")
@@ -197,13 +199,13 @@ class Satker:
             self.driver.get(url)
             Adetail = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
             deskripsi = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
-            desc = [desc.text for desc in deskripsi][0:-1][:-1][:-1]
+            desc = [desc.text for desc in deskripsi]
             details = [details for details in Adetail]
             return details,desc
         except Exception as e:
             print(e)
             print("error getting author data")
-            return None
+            return None,None
 
     def GetImage(self): #get news image
         try:
@@ -242,7 +244,7 @@ class Satker:
                 date = self.GetDate()
                 self.outSheet.cell(row=lastRow + 1, column=6, value=str(desc))
                 self.outSheet.cell(row=lastRow + 1, column=4, value=img[0])
-                self.outSheet.cell(row=lastRow + 1, column=7, value=date[0])
+                self.outSheet.cell(row=lastRow + 1, column=7, value=date)
                 if details != None:
                     for detail in details:
                         try:
