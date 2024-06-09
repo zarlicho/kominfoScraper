@@ -9,9 +9,11 @@ import undetected_chromedriver as uc
 from InquirerPy import inquirer
 from selenium import webdriver
 import pandas as pd
-import openpyxl,os
+import openpyxl,os,time,colorama
+from colorama import init,Fore
 
 
+init(autoreset=True)
 class Hoax:
     def __init__(self):
         option = uc.ChromeOptions() 
@@ -44,72 +46,95 @@ class Hoax:
     def Setup(self, page):
         try:
             self.driver.get(f"https://www.kominfo.go.id/content/all/laporan_isu_hoaks?page={page}")
+            time.sleep(2)
             if "You are now in line" in self.driver.page_source:
                 while True:
                     if "You are now in line" not in self.driver.page_source:
                         break
-                    print("waiting")
+                    print("[+] waiting")
         except Exception as e:
-            print(e)
+            print(Fore.RED + str(e))
 
     def GetArticle(self):
         try:
             elements = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='title']")))
             return [x.text for x in elements], [x.get_attribute('href') for x in elements]
         except Exception as e:
-            print(e)
-            print("error while get article")
+            print(Fore.RED + f"error while get Article! the message: {str(e)}\n","output will be None")
+            Fore.RESET
             return ["None"],["None"]
 
     def GetDate(self):
         try:
-            elements = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='date']")))
-            return [x.text for x in elements][0].split('\n')[1]
+            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                elements = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
+                return [x.text for x in elements][0].split('\n')[1]
         except Exception as e:
-            print(e)
-            print("error while get data data")
-            return ["None"]
+            print(Fore.YELLOW + f"error while get Date! the message: {str(e)}\n","output will be None")
+            return None
 
     def GetAuthor(self, url):
         try:
             self.driver.get(url)
-            Adetail = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='author']")))
-            Lcounter = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//ul//a")))
-            deskirpsi = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
-            details = [details for details in Adetail]
-            lCounters = [lCounter.get_attribute('href') for lCounter in Lcounter]
-            desc = [desc.text for desc in deskirpsi][1:-1][:-1]
-            print(desc)
-            return details, lCounters,desc
+            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                Adetail = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='author']")))
+                details = [details for details in Adetail]
+                return details
         except Exception as e:
-            print("error while get author data",e)
-            return None, None
+            print(Fore.YELLOW + f"error while get Author data! the message: {str(e)}\n","output will be None")
+            return None
+        
+    def GetDesc(self):
+        try:
+            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):   
+                deskirpsi = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
+                desc = [desc.text for desc in deskirpsi][1:][:-1][:-1]
+                return desc
+        except Exception as e:
+            print(Fore.YELLOW + f"error while get Description! the message: {str(e)}\n","output will be None")
+            return None
+        
+    def GetLinkC(self):
+        self.driver.get("https://www.kominfo.go.id/content/detail/54418/hoaks-akun-instagram-mengatasnamakan-pt-djarum/0/laporan_isu_hoaks")
+        try:
+            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):   
+                Lcounter = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//ul//a")))
+                lCounters = [lCounter.get_attribute('href') for lCounter in Lcounter]
+                return lCounters
+        except Exception as e:
+            try:
+                Lcounter = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='O0']//u//a")))
+                lCounters = [lCounter.get_attribute('href') for lCounter in Lcounter]
+                return lCounters
+            except Exception as e:
+                print(Fore.YELLOW + f"error while get Counter Link! the message: {str(e)}\n","output will be None")
+                return ['None']
 
     def GetImage(self):
         try:
-            img = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//img[@class='thumbnail-img artikel--bg-size-cover']")))
+            img = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//img[@class='thumbnail-img artikel--bg-size-cover']")))
             imgu = [x.get_attribute('src') for x in img]
             return imgu
         except Exception as e:
-            print(e)
-            print("error while get image data")
-            return ["None"]
+            print(Fore.YELLOW + f"error while get Image! the message: {str(e)}\n","output will be None")
+            return None
 
     def Main(self,pages):
         lastRow, lastPage = self.GetCurrentData()
         for x in range(lastPage+1, lastPage + pages+1):
             self.Setup(x)
             title, url = self.GetArticle()
-            print("page: ",x)
+            print(Fore.BLUE + "[+] page: ",x)
             for index, page in enumerate(url):
-                print("url: ", url[index])
                 self.outSheet.cell(row=lastRow + 1, column=1, value=title[index])
                 self.outSheet.cell(row=lastRow + 1, column=3, value=page)
                 self.outSheet.cell(row=lastRow + 1, column=9, value=x)
-                details, lCounters,desc = self.GetAuthor(page)
                 img = self.GetImage()   
-                date = self.GetDate()
                 self.outSheet.cell(row=lastRow + 1, column=4, value=img[0])
+                details = self.GetAuthor(page)
+                desc = self.GetDesc()
+                LinkC = self.GetLinkC()
+                date = self.GetDate()
                 self.outSheet.cell(row=lastRow + 1, column=8, value=date)
                 self.outSheet.cell(row=lastRow + 1, column=6, value=str(desc))
                 if details != None:
@@ -123,7 +148,8 @@ class Hoax:
                         except Exception as e:
                             print(e)
                             pass
-                    for index, linkC in enumerate(lCounters):
+                    
+                    for index, linkC in enumerate(LinkC):
                         self.outSheet.cell(row=lastRow + 1, column=7, value=linkC)
                         lastRow = lastRow + 1
                     lastRow = lastRow + 1
@@ -134,7 +160,7 @@ class Hoax:
                 lastRow = lastRow + 1
             print("\n")
         self.outWorkbook.save("HoaxData.xlsx")
-        print("done!")
+        print(Fore.GREEN + "[+] done!")
         self.driver.quit()
 
 class Satker:
@@ -168,7 +194,8 @@ class Satker:
     def Setup(self, page):
         try:
             self.driver.get(f"https://www.kominfo.go.id/content/all/berita_satker?page={page}")
-            if "You are now in line" in self.driver.page_source:
+            # WebDriverWait(self.driver, 40).until(EC.((By.XPATH, "//a[@class='title']")))
+            if "Request unsuccessful." in self.driver.page_source:
                 while True:
                     if "You are now in line" not in self.driver.page_source:
                         break
@@ -178,72 +205,70 @@ class Satker:
 
     def GetArticle(self): #get title and news url
         try:
-            elements = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='title']")))
+            elements = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//a[@class='title']")))
             return [x.text for x in elements], [x.get_attribute('href') for x in elements]
         except Exception as e:
-            print(e)
-            print("error getting articel data")
+            print(Fore.RED + f"error while get Article! the message: {str(e)}\n","output will be None")
             
 
     def GetDate(self): #get news date
         try:
-            elements = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='date']")))
-            print("date: ",[x.text for x in elements][0].split('\n')[1])
-            return [x.text for x in elements][0].split('\n')[1]
+            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                elements = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
+                # print([x.text for x in elements])
+                return [x.text for x in elements][0].split('\n')[1]
         except Exception as e:
-            print(e)
-            print("error getting date data")
+            print(Fore.YELLOW + f"error while get Date! the message: {str(e)}\n","output will be None")
+            return None
 
     def GetAuthor(self, url): #get news author
         try:
             self.driver.get(url)
-            Adetail = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
-            deskripsi = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
-            desc = [desc.text for desc in deskripsi]
-            details = [details for details in Adetail]
-            return details,desc
+            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
+                details = [details for details in Adetail]
+                return details
         except Exception as e:
-            print(e)
-            print("error getting author data")
-            return None,None
+            print(Fore.YELLOW + f"error while get Author! the message: {str(e)}\n","output will be None")
+            return None
+
+    def GetDesc(self):
+        finalResult = []
+        try:
+            if WebDriverWait(self.driver, 30).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                deskripsi = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
+                for desc in deskripsi:
+                    if desc.text != '':
+                        finalResult.append(desc.text)
+                return finalResult 
+        except Exception as e:
+            print(Fore.YELLOW + f"error while get Description! the message: {str(e)}\n","output will be None")
+            return ['None']
 
     def GetImage(self): #get news image
         try:
-            img = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "//img[@class='thumbnail-img artikel--bg-size-cover']")))
+            img = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//img[@class='thumbnail-img artikel--bg-size-cover']")))
             imgu = [x.get_attribute('src') for x in img]
             return imgu
         except Exception as e:
-            print(e)
-            print("error getting image data")
-
-    def GetDesc(self):
-        try:
-            # self.driver.get("https://www.kominfo.go.id/content/all/berita_satker?page=2")
-            desc = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='description']")))
-            description = [x.text for x in desc]
-            return description
-        except Exception as e:
-            print(e)
-            print("this is error deskripsi")
-
-
+            print(Fore.YELLOW + f"error while get Image! the message: {str(e)}\n","output will be None")
+            return None
     def Main(self,pages):
         lastRow, lastPage = self.GetCurrentData()
         for x in range(lastPage+1, lastPage + pages+1):
             self.Setup(x)
-            desc = self.GetDesc()
             title, url = self.GetArticle()
-            print("page: ",x)
+            print(Fore.BLUE + "[+] page: ",x)
             for index, page in enumerate(url):
-                print("url: ", url[index])
                 self.outSheet.cell(row=lastRow + 1, column=1, value=title[index])
                 self.outSheet.cell(row=lastRow + 1, column=3, value=page)
                 self.outSheet.cell(row=lastRow + 1, column=8, value=x)
-                details,desc = self.GetAuthor(page)
                 img = self.GetImage()   
-                date = self.GetDate()
-                self.outSheet.cell(row=lastRow + 1, column=6, value=str(desc))
                 self.outSheet.cell(row=lastRow + 1, column=4, value=img[0])
+                details = self.GetAuthor(page)
+                date = self.GetDate()
+                desc = self.GetDesc()
+                self.outSheet.cell(row=lastRow + 1, column=6, value=str(desc))
                 self.outSheet.cell(row=lastRow + 1, column=7, value=date)
                 if details != None:
                     for detail in details:
@@ -254,7 +279,7 @@ class Satker:
                             self.outSheet.cell(row=lastRow + 1, column=5, value=author)
                             lastRow = lastRow + 1
                         except Exception as e:
-                            print(e)
+                            print(Fore.YELLOW + f"error while get Adding author to excel! the message: {str(e)}\n","output will be skip")
                             pass
                     lastRow = lastRow + 1
                 else:
@@ -264,7 +289,7 @@ class Satker:
                 lastRow = lastRow + 1
             print("\n")
         self.outWorkbook.save("SatkerData.xlsx")
-        print("done!")
+        print(Fore.GREEN + "[+] done!")
         self.driver.quit()
 
 class UI:
