@@ -67,8 +67,9 @@ class Hoax:
     def GetDate(self):
         try:
             if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
-                elements = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
-                return [x.text for x in elements][0].split('\n')[1]
+                elements = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
+                print("date: ",elements.text.split("\n"))
+                return elements.text.split('\n')[1]
         except Exception as e:
             print(Fore.YELLOW + f"error while get Date! the message: {str(e)}\n","output will be None")
             return None
@@ -77,12 +78,13 @@ class Hoax:
         try:
             self.driver.get(url)
             if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
-                Adetail = WebDriverWait(self.driver, 20).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='author']")))
-                details = [details for details in Adetail]
-                return details
+                Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
+                print(Adetail.text.split("Kategori ")[1].split(" | ")[0])
+                print(Adetail.text.split(" | ")[-1])
+                return Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1]
         except Exception as e:
-            print(Fore.YELLOW + f"error while get Author data! the message: {str(e)}\n","output will be None")
-            return None
+            print(Fore.YELLOW + f"error while get Author! the message: {str(e)}\n","output will be None")
+            return None,None
         
     def GetDesc(self):
         try:
@@ -131,31 +133,17 @@ class Hoax:
                 self.outSheet.cell(row=lastRow + 1, column=9, value=x)
                 img = self.GetImage()   
                 self.outSheet.cell(row=lastRow + 1, column=4, value=img[0])
-                details = self.GetAuthor(page)
+                category,author = self.GetAuthor(page)
                 desc = self.GetDesc()
                 LinkC = self.GetLinkC()
                 date = self.GetDate()
                 self.outSheet.cell(row=lastRow + 1, column=8, value=date)
                 self.outSheet.cell(row=lastRow + 1, column=6, value=str(desc))
-                if details != None:
-                    for detail in details:
-                        try:
-                            category = detail.text.split("Kategori ")[1]
-                            author = category.split("| ")[1]
-                            self.outSheet.cell(row=lastRow + 1, column=2, value=category.split(" |")[0])
-                            self.outSheet.cell(row=lastRow + 1, column=5, value=author)
-                            lastRow = lastRow + 1
-                        except Exception as e:
-                            print(e)
-                            pass
-                    
-                    for index, linkC in enumerate(LinkC):
-                        self.outSheet.cell(row=lastRow + 1, column=7, value=linkC)
-                        lastRow = lastRow + 1
-                    lastRow = lastRow + 1
-                else:
-                    self.outSheet.cell(row=lastRow + 1, column=2, value="None")
-                    self.outSheet.cell(row=lastRow + 1, column=5, value="None")
+                self.outSheet.cell(row=lastRow + 1, column=2, value=category)
+                self.outSheet.cell(row=lastRow + 1, column=5, value=author)
+                lastRow = lastRow + 1
+                for index, linkC in enumerate(LinkC):
+                    self.outSheet.cell(row=lastRow + 1, column=7, value=linkC)
                     lastRow = lastRow + 1
                 lastRow = lastRow + 1
             print("\n")
@@ -213,10 +201,11 @@ class Satker:
 
     def GetDate(self): #get news date
         try:
+            # self.driver.get("https://www.kominfo.go.id/content/detail/40367/dorong-inklusi-keuangan-daerah-kominfo-latih-warga-banjarbaru-kelola-keuangan-digital/0/berita_satker")
             if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
-                elements = WebDriverWait(self.driver, 40).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
-                # print([x.text for x in elements])
-                return [x.text for x in elements][0].split('\n')[1]
+                elements = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
+                print("date: ",elements.text.split("\n"))
+                return elements.text.split('\n')[1]
         except Exception as e:
             print(Fore.YELLOW + f"error while get Date! the message: {str(e)}\n","output will be None")
             return None
@@ -225,14 +214,16 @@ class Satker:
         try:
             self.driver.get(url)
             if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
-                Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
-                details = [details for details in Adetail]
-                return details
+                Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
+                print(Adetail.text.split("Kategori ")[1].split(" | ")[0])
+                print(Adetail.text.split(" | ")[-1])
+                return Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1]
         except Exception as e:
             print(Fore.YELLOW + f"error while get Author! the message: {str(e)}\n","output will be None")
-            return None
+            return None,None
 
     def GetDesc(self):
+        self.driver.get("https://www.kominfo.go.id/content/detail/55732/serpihan-logam-dalam-makanan-bayi-awas-hoaks/0/berita_satker")
         finalResult = []
         try:
             if WebDriverWait(self.driver, 30).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
@@ -240,6 +231,7 @@ class Satker:
                 for desc in deskripsi:
                     if desc.text != '':
                         finalResult.append(desc.text)
+                print(finalResult[0])
                 return finalResult 
         except Exception as e:
             print(Fore.YELLOW + f"error while get Description! the message: {str(e)}\n","output will be None")
@@ -265,28 +257,14 @@ class Satker:
                 self.outSheet.cell(row=lastRow + 1, column=8, value=x)
                 img = self.GetImage()   
                 self.outSheet.cell(row=lastRow + 1, column=4, value=img[0])
-                details = self.GetAuthor(page)
+                category,author = self.GetAuthor(page)
                 date = self.GetDate()
                 desc = self.GetDesc()
                 self.outSheet.cell(row=lastRow + 1, column=6, value=str(desc))
                 self.outSheet.cell(row=lastRow + 1, column=7, value=date)
-                if details != None:
-                    for detail in details:
-                        try:
-                            category = detail.text.split("Kategori ")[1]
-                            author = category.split("| ")[1]
-                            self.outSheet.cell(row=lastRow + 1, column=2, value=category.split(" |")[0])
-                            self.outSheet.cell(row=lastRow + 1, column=5, value=author)
-                            lastRow = lastRow + 1
-                        except Exception as e:
-                            print(Fore.YELLOW + f"error while get Adding author to excel! the message: {str(e)}\n","output will be skip")
-                            pass
-                    lastRow = lastRow + 1
-                else:
-                    self.outSheet.cell(row=lastRow + 1, column=2, value="None")
-                    self.outSheet.cell(row=lastRow + 1, column=5, value="None")
-                    lastRow = lastRow + 1
-                lastRow = lastRow + 1
+                self.outSheet.cell(row=lastRow + 1, column=2, value=category)
+                self.outSheet.cell(row=lastRow + 1, column=5, value=author)
+                lastRow+=1
             print("\n")
         self.outWorkbook.save("SatkerData.xlsx")
         print(Fore.GREEN + "[+] done!")
@@ -325,3 +303,6 @@ if __name__ == "__main__":
     os.system('cls')
     myui = UI()
     myui.main()
+
+# sat = Satker()
+# sat.GetDesc()
