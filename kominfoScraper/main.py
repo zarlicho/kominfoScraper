@@ -46,7 +46,8 @@ class Hoax:
     def Setup(self, page):
         try:
             self.driver.get(f"https://www.kominfo.go.id/content/all/laporan_isu_hoaks?page={page}")
-            time.sleep(2)
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(5)
             if "You are now in line" in self.driver.page_source:
                 while True:
                     if "You are now in line" not in self.driver.page_source:
@@ -65,36 +66,63 @@ class Hoax:
             return ["None"],["None"]
 
     def GetDate(self):
-        try:
-            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
-                elements = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
-                print("date: ",elements.text.split("\n"))
-                return elements.text.split('\n')[1]
-        except Exception as e:
-            print(Fore.YELLOW + f"error while get Date! the message: {str(e)}\n","output will be None")
-            return None
+        for x in range(5):
+            while True:
+                try:
+                    if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                        elements = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
+                        print("date: ",elements.text.split("\n"))
+                        return elements.text.split('\n')[1]
+                except Exception as e:
+                    if x < 2:
+                        self.driver.refresh()
+                        x+=1
+                        print(Fore.YELLOW + "program will try it again to scrape date data")
+                        continue
+                    else:
+                        print(Fore.YELLOW + f"error while get Date! the message: {str(e)}\n","output will be None")
+                        return None
+                break
+            break
 
     def GetAuthor(self, url):
-        try:
-            self.driver.get(url)
-            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
-                Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
-                print(Adetail.text.split("Kategori ")[1].split(" | ")[0])
-                print(Adetail.text.split(" | ")[-1])
-                return Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1]
-        except Exception as e:
-            print(Fore.YELLOW + f"error while get Author! the message: {str(e)}\n","output will be None")
-            return None,None
+        for x in range(5):
+            while True:
+                try:
+                    self.driver.get(url)
+                    if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                        Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
+                        print(Adetail.text.split("Kategori ")[1].split(" | ")[0])
+                        print(Adetail.text.split(" | ")[-1])
+                        return Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1]
+                except Exception as e:
+                    if x < 2:
+                        x+=1
+                        print(Fore.YELLOW + "program will try it again to scrape author data")
+                        continue
+                    else:
+                        print(Fore.YELLOW + f"error while get Author! the message: {str(e)}\n","output will be None")
+                        return None,None
+                break
+            break
         
     def GetDesc(self):
-        try:
-            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):   
-                deskirpsi = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
-                desc = [desc.text for desc in deskirpsi][1:][:-1][:-1]
-                return desc
-        except Exception as e:
-            print(Fore.YELLOW + f"error while get Description! the message: {str(e)}\n","output will be None")
-            return None
+        for x in range(5):
+            while True:
+                try:
+                    if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):   
+                        deskirpsi = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
+                        desc = [desc.text for desc in deskirpsi][1:][:-1][:-1]
+                        return desc
+                except Exception as e:
+                    if x < 2:
+                        x+=1
+                        self.driver.refresh()
+                        print(Fore.YELLOW + "program will try it again to scrape description data")
+                        continue
+                    else:
+                            print(Fore.YELLOW + f"error while get Description! the message: {str(e)}\n","output will be None")
+                            return None
         
     def GetLinkC(self):
         self.driver.get("https://www.kominfo.go.id/content/detail/54418/hoaks-akun-instagram-mengatasnamakan-pt-djarum/0/laporan_isu_hoaks")
@@ -200,42 +228,68 @@ class Satker:
             
 
     def GetDate(self): #get news date
-        try:
-            # self.driver.get("https://www.kominfo.go.id/content/detail/40367/dorong-inklusi-keuangan-daerah-kominfo-latih-warga-banjarbaru-kelola-keuangan-digital/0/berita_satker")
-            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
-                elements = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
-                print("date: ",elements.text.split("\n"))
-                return elements.text.split('\n')[1]
-        except Exception as e:
-            print(Fore.YELLOW + f"error while get Date! the message: {str(e)}\n","output will be None")
-            return None
+        for x in range(5):
+            while True:
+                try:
+                    # self.driver.get("https://www.kominfo.go.id/content/detail/40367/dorong-inklusi-keuangan-daerah-kominfo-latih-warga-banjarbaru-kelola-keuangan-digital/0/berita_satker")
+                    if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                        elements = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[1]/div[1]")))
+                        print("date: ",elements.text.split("\n"))
+                        return elements.text.split('\n')[1]
+                except Exception as e:
+                    if x < 2:
+                        x+=1
+                        self.driver.refresh()
+                        print(Fore.YELLOW + "program will try it again to scrape date data")
+                        continue
+                    else:
+                        print(Fore.YELLOW + f"error while get Date! the message: {str(e)}\n","output will be None")
+                        return None
+                break
+            break
 
     def GetAuthor(self, url): #get news author
-        try:
-            self.driver.get(url)
-            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
-                Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
-                print(Adetail.text.split("Kategori ")[1].split(" | ")[0])
-                print(Adetail.text.split(" | ")[-1])
-                return Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1]
-        except Exception as e:
-            print(Fore.YELLOW + f"error while get Author! the message: {str(e)}\n","output will be None")
-            return None,None
+        for x in range(5):
+            while True:
+                try:
+                    self.driver.get(url)
+                    if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                        Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
+                        print(Adetail.text.split("Kategori ")[1].split(" | ")[0])
+                        print(Adetail.text.split(" | ")[-1])
+                        return Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1]
+                except Exception as e:
+                    if x < 2:
+                        x+=1
+                        print(Fore.YELLOW + "program will try it again to scrape author data")
+                        continue
+                    else:
+                        print(Fore.YELLOW + f"error while get Author! the message: {str(e)}\n","output will be None")
+                        return None,None
+                break
+            break
 
     def GetDesc(self):
-        self.driver.get("https://www.kominfo.go.id/content/detail/55732/serpihan-logam-dalam-makanan-bayi-awas-hoaks/0/berita_satker")
-        finalResult = []
-        try:
-            if WebDriverWait(self.driver, 30).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
-                deskripsi = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
-                for desc in deskripsi:
-                    if desc.text != '':
-                        finalResult.append(desc.text)
-                print(finalResult[0])
-                return finalResult 
-        except Exception as e:
-            print(Fore.YELLOW + f"error while get Description! the message: {str(e)}\n","output will be None")
-            return ['None']
+        for x in range(5):
+            while True:
+                finalResult = []
+                try:
+                    if WebDriverWait(self.driver, 30).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
+                        deskripsi = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
+                        for desc in deskripsi:
+                            if desc.text != '':
+                                finalResult.append(desc.text)
+                        print(finalResult[0])
+                        return finalResult 
+                except Exception as e:
+                    if x < 2:
+                        x+=1
+                        self.driver.refresh()
+                        print(Fore.YELLOW + "program will try it again to scrape description data")
+                        continue
+                    else:
+                        print(Fore.YELLOW + f"error while get Description! the message: {str(e)}\n","output will be None")
+                        return ['None']
 
     def GetImage(self): #get news image
         try:
