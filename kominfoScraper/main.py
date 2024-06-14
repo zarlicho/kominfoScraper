@@ -17,9 +17,9 @@ init(autoreset=True)
 class Hoax:
     def __init__(self):
         option = uc.ChromeOptions() 
-        # option.add_argument('--disable-gpu')
-        # option.add_argument('--headless')
-        self.driver = uc.Chrome(options=option, use_subprocess=True)
+        option.add_argument('--disable-gpu')
+        option.add_argument('--headless')
+        self.driver = uc.Chrome(options=option, use_subprocess=False)
         self.driver.set_page_load_timeout(30)
         self.outWorkbook = openpyxl.load_workbook("HoaxData.xlsx")
         self.outSheet = self.outWorkbook.active
@@ -74,7 +74,7 @@ class Hoax:
                         print("date: ",elements.text.split("\n"))
                         return elements.text.split('\n')[1]
                 except Exception as e:
-                    if x < 2:
+                    if x < 5:
                         self.driver.refresh()
                         x+=1
                         print(Fore.YELLOW + "program will try it again to scrape date data")
@@ -92,11 +92,10 @@ class Hoax:
                     self.driver.get(url)
                     if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
                         Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
-                        print(Adetail.text.split("Kategori ")[1].split(" | ")[0])
-                        print(Adetail.text.split(" | ")[-1])
+                        print(Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1])
                         return Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1]
                 except Exception as e:
-                    if x < 2:
+                    if x < 5:
                         x+=1
                         print(Fore.YELLOW + "program will try it again to scrape author data")
                         continue
@@ -113,9 +112,10 @@ class Hoax:
                     if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):   
                         deskirpsi = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//p")))
                         desc = [desc.text for desc in deskirpsi][1:][:-1][:-1]
+                        print("success to get description data!")
                         return desc
                 except Exception as e:
-                    if x < 2:
+                    if x < 5:
                         x+=1
                         self.driver.refresh()
                         print(Fore.YELLOW + "program will try it again to scrape description data")
@@ -123,22 +123,30 @@ class Hoax:
                     else:
                             print(Fore.YELLOW + f"error while get Description! the message: {str(e)}\n","output will be None")
                             return None
+                break
+            break
         
     def GetLinkC(self):
-        self.driver.get("https://www.kominfo.go.id/content/detail/54418/hoaks-akun-instagram-mengatasnamakan-pt-djarum/0/laporan_isu_hoaks")
-        try:
-            if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):   
-                Lcounter = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//ul//a")))
-                lCounters = [lCounter.get_attribute('href') for lCounter in Lcounter]
-                return lCounters
-        except Exception as e:
-            try:
-                Lcounter = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='O0']//u//a")))
-                lCounters = [lCounter.get_attribute('href') for lCounter in Lcounter]
-                return lCounters
-            except Exception as e:
-                print(Fore.YELLOW + f"error while get Counter Link! the message: {str(e)}\n","output will be None")
-                return ['None']
+        print("url: ",self.driver.current_url)
+        for x in range(5):
+            while True:
+                try:
+                    if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):   
+                        Lcounter = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='youtube-container']//ul//a")))
+                        lCounters = [lCounter.get_attribute('href') for lCounter in Lcounter]
+                        print("success to get counter link data!")
+                        return lCounters
+                except Exception as e:
+                    if x < 5:
+                        x+=1
+                        print(Fore.YELLOW + "program will try it again to scrape counter link data")
+                        self.driver.refresh()
+                        continue
+                    else:
+                        print(Fore.YELLOW + f"error while get Counter Link! the message: {str(e)}\n","output will be None")
+                        return ['None']
+                break
+            break
 
     def GetImage(self):
         try:
@@ -155,6 +163,7 @@ class Hoax:
             self.Setup(x)
             title, url = self.GetArticle()
             print(Fore.BLUE + "[+] page: ",x)
+            print(Fore.BLUE + "[+] url: ",url)
             for index, page in enumerate(url):
                 self.outSheet.cell(row=lastRow + 1, column=1, value=title[index])
                 self.outSheet.cell(row=lastRow + 1, column=3, value=page)
@@ -182,8 +191,8 @@ class Hoax:
 class Satker:
     def __init__(self):
         option = uc.ChromeOptions() 
-        # option.add_argument('--disable-gpu')
-        # option.add_argument('--headless')
+        option.add_argument('--disable-gpu')
+        option.add_argument('--headless')
         self.driver = uc.Chrome(options=option, use_subprocess=True)
         self.driver.set_page_load_timeout(30)
         self.outWorkbook = openpyxl.load_workbook("SatkerData.xlsx")
@@ -237,7 +246,7 @@ class Satker:
                         print("date: ",elements.text.split("\n"))
                         return elements.text.split('\n')[1]
                 except Exception as e:
-                    if x < 2:
+                    if x < 5:
                         x+=1
                         self.driver.refresh()
                         print(Fore.YELLOW + "program will try it again to scrape date data")
@@ -255,13 +264,14 @@ class Satker:
                     self.driver.get(url)
                     if WebDriverWait(self.driver, 20).until(EC.url_contains("https://www.kominfo.go.id/content/detail")):
                         Adetail = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[8]/div/div[2]/div/div[1]/div[1]/div[2]/div[1]")))
-                        print(Adetail.text.split("Kategori ")[1].split(" | ")[0])
-                        print(Adetail.text.split(" | ")[-1])
+                        print(Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1])
+                        # print(Adetail.text.split(" | ")[-1])
                         return Adetail.text.split("Kategori ")[1].split(" | ")[0],Adetail.text.split(" | ")[-1]
                 except Exception as e:
-                    if x < 2:
+                    if x < 5:
                         x+=1
                         print(Fore.YELLOW + "program will try it again to scrape author data")
+                        # self.driver.refresh()
                         continue
                     else:
                         print(Fore.YELLOW + f"error while get Author! the message: {str(e)}\n","output will be None")
@@ -279,10 +289,10 @@ class Satker:
                         for desc in deskripsi:
                             if desc.text != '':
                                 finalResult.append(desc.text)
-                        print(finalResult[0])
+                        print("success to scrape description!")
                         return finalResult 
                 except Exception as e:
-                    if x < 2:
+                    if x < 5:
                         x+=1
                         self.driver.refresh()
                         print(Fore.YELLOW + "program will try it again to scrape description data")
@@ -290,6 +300,8 @@ class Satker:
                     else:
                         print(Fore.YELLOW + f"error while get Description! the message: {str(e)}\n","output will be None")
                         return ['None']
+                break
+            break
 
     def GetImage(self): #get news image
         try:
@@ -305,6 +317,7 @@ class Satker:
             self.Setup(x)
             title, url = self.GetArticle()
             print(Fore.BLUE + "[+] page: ",x)
+            print(Fore.BLUE + "[+] url: ",url)
             for index, page in enumerate(url):
                 self.outSheet.cell(row=lastRow + 1, column=1, value=title[index])
                 self.outSheet.cell(row=lastRow + 1, column=3, value=page)
